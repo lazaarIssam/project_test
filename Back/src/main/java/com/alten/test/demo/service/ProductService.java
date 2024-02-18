@@ -26,8 +26,7 @@ public class ProductService {
         return ProductUtils.verifyProductFields(product)
                 .doOnError(err -> new ProductException(err.getMessage()))
                 .map(element -> {
-                    int nextProductId = SequenceManager.getNextSequence();
-                    element.setId(nextProductId);
+                    element.setId(SequenceManager.getNextSequence());
                     return element;
                 })
                 .flatMap(e -> productRepository.save(e))
