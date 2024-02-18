@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
 
 @Document(collection = "products")
 @Data
@@ -18,8 +16,7 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 public class Product {
 
     @Id
-    @MongoId(FieldType.INT64)
-    private ObjectId id;
+    private Integer id;
     private String code;
     private String name;
     private String description;

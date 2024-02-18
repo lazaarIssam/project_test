@@ -19,9 +19,9 @@ public class ProductUtils {
         if (product.getPrice() == null || product.getPrice() <= 0) {
             return Mono.error( new ProductException("Price cannot be null or < 0"));
         }
-        if (product.getQuantity() == null) {
-            return Mono.error( new ProductException("Quantity cannot be null"));
-        }
+//        if (product.getQuantity() == null) {
+//            return Mono.error( new ProductException("Quantity cannot be null"));
+//        }
         if (product.getInventoryStatus() == null || product.getInventoryStatus().isBlank()) {
             return Mono.error( new ProductException("Quantity cannot be blank"));
         }

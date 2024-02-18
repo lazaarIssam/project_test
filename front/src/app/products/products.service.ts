@@ -13,29 +13,14 @@ export class ProductsService {
 
     constructor(private http: HttpClient) { }
 
-    getProducts(): Observable<Product[]> {
-        if( ! ProductsService.productslist )
-        {
-            this.http.get<any>('assets/products.json').subscribe(data => {
-                ProductsService.productslist = data.data;
-                
-                this.products$.next(ProductsService.productslist);
-            });
-        }
-        else
-        {
-            this.products$.next(ProductsService.productslist);
-        }
+      private productsUrl = 'http://localhost:8080/products'; // Define the products URL
 
-        return this.products$;
+    getProducts(): Observable<Product[]> {
+        return this.http.get<Product[]>(this.productsUrl);
     }
 
     create(prod: Product): Observable<Product[]> {
-
-        ProductsService.productslist.push(prod);
-        this.products$.next(ProductsService.productslist);
-        
-        return this.products$;
+        return this.http.post<Product[]>(this.productsUrl, prod);
     }
 
     update(prod: Product): Observable<Product[]>{

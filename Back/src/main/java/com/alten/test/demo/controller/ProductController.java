@@ -28,17 +28,17 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public Mono<Product> getProductDetails (@PathVariable ObjectId id){
+    public Mono<Product> getProductDetails (@PathVariable Integer id){
         return productService.productDetails(id);
     }
 
     @PatchMapping("/{id}")
-    public Mono<Product> updateAProduct(@PathVariable ObjectId id, @RequestBody Product product){
+    public Mono<Product> updateAProduct(@PathVariable Integer id, @RequestBody Product product){
         return productService.updateProduct(id,product);
     }
 
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<String>> deleteProduct (@PathVariable ObjectId id){
+    public Mono<ResponseEntity<String>> deleteProduct (@PathVariable Integer id){
         return productService.deleteProduct(id);
     }
 }
