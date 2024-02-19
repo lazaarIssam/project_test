@@ -23,22 +23,22 @@ public class ProductController {
     }
 
     @PostMapping
-    public Mono<Product> createNewProduct(@RequestBody Product product){
+    public Mono<ResponseEntity<Product>> createNewProduct(@RequestBody Product product){
         return productService.newProduct(product);
     }
 
     @GetMapping("/{id}")
-    public Mono<Product> getProductDetails (@PathVariable Integer id){
+    public Mono<ResponseEntity<Product>> getProductDetails (@PathVariable Integer id){
         return productService.productDetails(id);
     }
 
     @PatchMapping("/{id}")
-    public Mono<Product> updateAProduct(@PathVariable Integer id, @RequestBody Product product){
+    public Mono<ResponseEntity<Product>> updateAProduct(@PathVariable Integer id, @RequestBody Product product){
         return productService.updateProduct(id,product);
     }
 
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<String>> deleteProduct (@PathVariable Integer id){
+    public Mono<ResponseEntity<Product>> deleteProduct (@PathVariable Integer id){
         return productService.deleteProduct(id);
     }
 }

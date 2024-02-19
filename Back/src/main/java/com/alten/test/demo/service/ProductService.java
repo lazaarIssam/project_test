@@ -7,6 +7,8 @@ import com.alten.test.demo.utils.ProductUtils;
 import com.alten.test.demo.utils.SequenceManager;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -22,32 +24,45 @@ public class ProductService {
         return productRepository.findAll();
     }
 
-    public Mono<Product> newProduct(Product product) {
+    public Mono<ResponseEntity<Product>> newProduct(Product product) {
         return ProductUtils.verifyProductFields(product)
-                .doOnError(err -> new ProductException(err.getMessage()))
-                .map(element -> {
+                .flatMap(element -> {
                     element.setId(SequenceManager.getNextSequence());
-                    return element;
+                    return productRepository.save(element)
+                            .doOnError(err -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving the product")))
+                            .thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(element));
                 })
-                .flatMap(e -> productRepository.save(e))
-                .doOnError(err -> new ProductException("couldn't create new product "+err.getMessage()));
+                .onErrorResume(ProductException.class, ex -> Mono.just(ResponseEntity.badRequest().body(new Product())));
+
     }
 
-    public Mono<Product> productDetails(Integer id) {
+    public Mono<ResponseEntity<Product>> productDetails(Integer id) {
         return productRepository.findById(id)
-                .switchIfEmpty(Mono.error(new ProductException("No Product found with ID: "+id)));
-    }
-
-    public Mono<Product> updateProduct(Integer id, Product product) {
-        return this.productDetails(id)
-                .flatMap(existingProduct -> productRepository.save(ProductUtils.setProductFields(existingProduct,product)))
-                .doOnError(err -> new ProductException("Error updating product" + err.getMessage()));
-    }
-
-    public Mono<ResponseEntity<String>> deleteProduct(Integer id) {
-        return this.productDetails(id)
-                .flatMap(product -> productRepository.delete(product))
-                .thenReturn(ResponseEntity.ok("Product deleted !"))
+                .map(product -> ResponseEntity.ok(product))
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
+    }
+
+    public Mono<ResponseEntity<Product>> updateProduct(Integer id, Product product) {
+        return this.productDetails(id)
+                .flatMap(existingProduct -> {
+                    if (existingProduct.getStatusCode() == HttpStatus.NOT_FOUND) {
+                        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Product()));
+                    }
+                    Product updatedProduct = ProductUtils.setProductFields(existingProduct.getBody(), product);
+                    return productRepository.save(updatedProduct)
+                            .thenReturn(ResponseEntity.ok(updatedProduct));
+                })
+                .onErrorResume(err -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Product())));
+    }
+
+    public Mono<ResponseEntity<Product>> deleteProduct(Integer id) {
+        return this.productDetails(id)
+                .flatMap(product -> {
+                    if (product.getStatusCode() == HttpStatus.NOT_FOUND) {
+                        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Product()));
+                    }
+                    return productRepository.delete(product.getBody()).thenReturn(ResponseEntity.ok(new Product()));
+                })
+                .onErrorResume(err -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Product())));
     }
 }

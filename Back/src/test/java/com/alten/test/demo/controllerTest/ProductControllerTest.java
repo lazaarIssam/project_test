@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -46,30 +47,30 @@ public class ProductControllerTest {
     @Test
     public void testCreateNewProduct() {
         Product product = new Product(null, "P1", "Product 1", "Description 1", 100, 10, "InStock", "FITNESS", null, 4);
-        Mono<Product> mockProduct = Mono.just(product);
+        Mono<ResponseEntity<Product>> mockProduct = Mono.just(ResponseEntity.status(HttpStatus.CREATED).body(product));
 
         // Mock the service
         when(productService.newProduct(product)).thenReturn(mockProduct);
 
-        Mono<Product> result = productController.createNewProduct(product);
+        Mono<ResponseEntity<Product>> result = productController.createNewProduct(product);
 
         StepVerifier.create(result)
-                .expectNext(product)
+                .expectNext(ResponseEntity.status(HttpStatus.CREATED).body(product))
                 .verifyComplete();
     }
 
     @Test
     public void testGetProductDetails(){
         Product product = new Product(1, "P1", "Product 1", "Description 1", 100, 10, "InStock", "FITNESS", null, 4);
-        Mono<Product> mockProduct = Mono.just(product);
+        Mono<ResponseEntity<Product>> mockProduct = Mono.just(ResponseEntity.ok(product));
 
         // Mock the service
         when(productService.productDetails(1)).thenReturn(mockProduct);
 
-        Mono<Product> result = productController.getProductDetails(1);
+        Mono<ResponseEntity<Product>> result = productController.getProductDetails(1);
 
         StepVerifier.create(result)
-                .expectNext(product)
+                .expectNext(ResponseEntity.ok(product))
                 .verifyComplete();
     }
 
@@ -77,23 +78,23 @@ public class ProductControllerTest {
     public void testUpdateAProduct(){
         Product source = new Product(1, "P1", "Product 1", "Description 1", 100, 10, "InStock", "FITNESS", null, 4);
         Product product = new Product(1, "P1Modified", "Product Modified", "Description Modified", 200, 20, "LowStock", "RETAIL", null, 3);
-        Mono<Product> mockProduct = Mono.just(product);
+        Mono<ResponseEntity<Product>> mockProduct = Mono.just(ResponseEntity.ok(product));
 
         // mock the service
         when(productService.updateProduct(1,source)).thenReturn(mockProduct);
 
-        Mono<Product> result = productController.updateAProduct(1,source);
+        Mono<ResponseEntity<Product>> result = productController.updateAProduct(1,source);
 
         StepVerifier.create(result)
-                .expectNext(product)
+                .expectNext(ResponseEntity.ok(product))
                 .verifyComplete();
     }
 
     @Test
     public void testDeleteProduct(){
-        when(productService.deleteProduct(1)).thenReturn(Mono.just(ResponseEntity.ok("Product deleted !")));
+        when(productService.deleteProduct(1)).thenReturn(Mono.just(ResponseEntity.ok(new Product())));
 
-        Mono<ResponseEntity<String>> result = productController.deleteProduct(1);
+        Mono<ResponseEntity<Product>> result = productController.deleteProduct(1);
 
         StepVerifier.create(result)
                 .expectNextMatches(responseEntity -> responseEntity.getStatusCode().is2xxSuccessful())

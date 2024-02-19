@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Product } from './product.class';
 
 @Injectable({
@@ -23,30 +23,36 @@ export class ProductsService {
         return this.http.post<Product[]>(this.productsUrl, prod);
     }
 
-    update(prod: Product): Observable<Product[]>{
-        ProductsService.productslist.forEach(element => {
-            if(element.id == prod.id)
-            {
-                element.name = prod.name;
-                element.category = prod.category;
-                element.code = prod.code;
-                element.description = prod.description;
-                element.image = prod.image;
-                element.inventoryStatus = prod.inventoryStatus;
-                element.price = prod.price;
-                element.quantity = prod.quantity;
-                element.rating = prod.rating;
-            }
-        });
-        this.products$.next(ProductsService.productslist);
-
-        return this.products$;
+    update(prod: Product): Observable<Product> {
+        const url = `${this.productsUrl}/${prod.id}`;
+        return this.http.patch<Product>(url, prod).pipe(
+            tap(() => {
+                // Update the local products list if needed
+                ProductsService.productslist = ProductsService.productslist.map(element => {
+                if (element.id === prod.id) {
+                    return {
+                    ...element,
+                    name: prod.name,
+                    category: prod.category,
+                    code: prod.code,
+                    description: prod.description,
+                    image: prod.image,
+                    inventoryStatus: prod.inventoryStatus,
+                    price: prod.price,
+                    quantity: prod.quantity,
+                    rating: prod.rating
+                    };
+                }
+                return element;
+                });
+                this.products$.next(ProductsService.productslist);
+            })
+        );
     }
 
 
     delete(id: number): Observable<Product[]>{
-        ProductsService.productslist = ProductsService.productslist.filter(value => { return value.id !== id } );
-        this.products$.next(ProductsService.productslist);
-        return this.products$;
+        const url = `${this.productsUrl}/${id}`;
+        return this.http.delete<Product[]>(url);
     }
 }
